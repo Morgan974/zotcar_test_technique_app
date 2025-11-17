@@ -98,65 +98,72 @@ final class WatchedMovieController extends AbstractController
     #[Route('', name: 'list', methods: ['GET'])]
     public function list(Request $request): JsonResponse
     {
-        $sortBy = $request->query->get('sortBy', 'title');
-        $order = strtolower($request->query->get('order', 'asc'));
+        try {
+            $sortBy = $request->query->get('sortBy', 'title');
+            $order = strtolower($request->query->get('order', 'asc'));
 
-        $titleFilter = $request->query->get('title', '');
-        $directorFilter = $request->query->get('director', '');
-        $yearFilter = $request->query->get('year', '');
+            $titleFilter = $request->query->get('title', '');
+            $directorFilter = $request->query->get('director', '');
+            $yearFilter = $request->query->get('year', '');
 
-        $allowedSortFields = ['title', 'director', 'releaseDate'];
-        if (!in_array($sortBy, $allowedSortFields, true)) {
+            $allowedSortFields = ['title', 'director', 'releaseDate'];
+            if (!in_array($sortBy, $allowedSortFields, true)) {
+                return new JsonResponse(
+                    ['error' => sprintf('Champ de tri invalide. Champs autorisés: %s', implode(', ', $allowedSortFields))],
+                    Response::HTTP_BAD_REQUEST
+                );
+            }
+
+            if (!in_array($order, ['asc', 'desc'], true)) {
+                return new JsonResponse(
+                    ['error' => 'Ordre de tri invalide. Utilisez "asc" ou "desc"'],
+                    Response::HTTP_BAD_REQUEST
+                );
+            }
+
+            $qb = $this->watchedMovieRepository->createQueryBuilder('wm');
+
+            if (!empty($titleFilter)) {
+                $qb->andWhere('LOWER(wm.title) LIKE :title')
+                   ->setParameter('title', '%' . strtolower($titleFilter) . '%');
+            }
+
+            if (!empty($directorFilter)) {
+                $qb->andWhere('LOWER(wm.director) LIKE :director')
+                   ->setParameter('director', '%' . strtolower($directorFilter) . '%');
+            }
+
+            if (!empty($yearFilter)) {
+                $year = (int) $yearFilter;
+                $startDate = new \DateTime($year . '-01-01');
+                $endDate = new \DateTime($year . '-12-31');
+                $qb->andWhere('wm.releaseDate >= :startDate')
+                   ->andWhere('wm.releaseDate <= :endDate')
+                   ->setParameter('startDate', $startDate)
+                   ->setParameter('endDate', $endDate);
+            }
+
+            $qb->orderBy('wm.' . $sortBy, strtoupper($order));
+
+            $watchedMovies = $qb->getQuery()->getResult();
+
+            $movies = array_map(function (WatchedMovie $watchedMovie) {
+                return [
+                    'id' => $watchedMovie->getIdApi(),
+                    'idApi' => $watchedMovie->getIdApi(),
+                    'title' => $watchedMovie->getTitle(),
+                    'director' => $watchedMovie->getDirector(),
+                    'releaseDate' => $watchedMovie->getReleaseDate()?->format('Y-m-d') ?? '',
+                ];
+            }, $watchedMovies);
+
+            return new JsonResponse($movies, Response::HTTP_OK);
+        } catch (\Exception $e) {
             return new JsonResponse(
-                ['error' => sprintf('Champ de tri invalide. Champs autorisés: %s', implode(', ', $allowedSortFields))],
-                Response::HTTP_BAD_REQUEST
+                ['error' => 'Erreur serveur: ' . $e->getMessage()],
+                Response::HTTP_INTERNAL_SERVER_ERROR
             );
         }
-
-        if (!in_array($order, ['asc', 'desc'], true)) {
-            return new JsonResponse(
-                ['error' => 'Ordre de tri invalide. Utilisez "asc" ou "desc"'],
-                Response::HTTP_BAD_REQUEST
-            );
-        }
-
-        $qb = $this->watchedMovieRepository->createQueryBuilder('wm');
-
-        if (!empty($titleFilter)) {
-            $qb->andWhere('LOWER(wm.title) LIKE :title')
-               ->setParameter('title', '%' . strtolower($titleFilter) . '%');
-        }
-
-        if (!empty($directorFilter)) {
-            $qb->andWhere('LOWER(wm.director) LIKE :director')
-               ->setParameter('director', '%' . strtolower($directorFilter) . '%');
-        }
-
-        if (!empty($yearFilter)) {
-            $year = (int) $yearFilter;
-            $startDate = new \DateTime($year . '-01-01');
-            $endDate = new \DateTime($year . '-12-31');
-            $qb->andWhere('wm.releaseDate >= :startDate')
-               ->andWhere('wm.releaseDate <= :endDate')
-               ->setParameter('startDate', $startDate)
-               ->setParameter('endDate', $endDate);
-        }
-
-        $qb->orderBy('wm.' . $sortBy, strtoupper($order));
-
-        $watchedMovies = $qb->getQuery()->getResult();
-
-        $movies = array_map(function (WatchedMovie $watchedMovie) {
-            return [
-                'id' => $watchedMovie->getIdApi(),
-                'idApi' => $watchedMovie->getIdApi(),
-                'title' => $watchedMovie->getTitle(),
-                'director' => $watchedMovie->getDirector(),
-                'releaseDate' => $watchedMovie->getReleaseDate()?->format('Y-m-d') ?? '',
-            ];
-        }, $watchedMovies);
-
-        return new JsonResponse($movies, Response::HTTP_OK);
     }
 
     /**
