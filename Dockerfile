@@ -57,8 +57,11 @@ RUN composer update --no-interaction --no-scripts --prefer-dist && \
 RUN mkdir -p /var/www/html/var && \
     chown -R www-data:www-data /var/www/html/var
 
+# Make render-start.sh executable
+RUN chmod +x /var/www/html/render-start.sh
+
 EXPOSE 8000
 
-# Use a shell script to handle PORT environment variable from Render
-CMD ["sh", "-c", "php -S 0.0.0.0:${PORT:-8000} -t public"]
+# Use render-start.sh to start the application (handles .env and PORT)
+CMD ["/var/www/html/render-start.sh"]
 
