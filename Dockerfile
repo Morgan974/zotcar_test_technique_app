@@ -42,6 +42,7 @@ RUN if [ ! -f .env ]; then \
         echo "APP_SECRET=change-me-in-production" >> .env && \
         echo "DATABASE_URL=postgresql://user:password@localhost:5432/database" >> .env && \
         echo "CORS_ALLOW_ORIGIN=^https?://(localhost|127\.0\.0\.1)(:[0-9]+)?$" >> .env && \
+        echo "DEFAULT_URI=http://localhost" >> .env && \
         echo ".env file created in Dockerfile"; \
     else \
         echo ".env file already exists"; \

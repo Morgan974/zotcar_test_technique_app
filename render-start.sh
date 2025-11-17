@@ -16,6 +16,7 @@ APP_ENV=prod
 APP_SECRET=change-me-in-production
 DATABASE_URL=postgresql://user:password@localhost:5432/database
 CORS_ALLOW_ORIGIN=^https?://(localhost|127\.0\.0\.1)(:[0-9]+)?$
+DEFAULT_URI=http://localhost
 EOF
     echo ".env file created"
 fi
