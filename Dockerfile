@@ -64,5 +64,6 @@ RUN chmod +x /var/www/html/render-start.sh
 EXPOSE 8000
 
 # Use render-start.sh to start the application (handles .env and PORT)
+# The router.php file ensures Symfony routes work correctly with PHP built-in server
 CMD ["/var/www/html/render-start.sh"]
 

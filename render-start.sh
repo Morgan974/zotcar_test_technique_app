@@ -33,8 +33,8 @@ fi
 mkdir -p var
 chmod -R 777 var
 
-# Start PHP built-in server
+# Start PHP built-in server with router script
 echo "Starting PHP server on port ${PORT:-8000}..."
 echo "Server will be accessible at: http://0.0.0.0:${PORT:-8000}"
-exec php -S 0.0.0.0:${PORT:-8000} -t public
+exec php -S 0.0.0.0:${PORT:-8000} -t public public/router.php
 
