@@ -36,8 +36,10 @@ RUN if [ -f composer.lock ]; then \
 COPY . .
 
 # Install/update dependencies, run scripts and generate autoloader
-RUN composer update --no-interaction && \
-    composer dump-autoload --optimize
+# Skip scripts during build to avoid requiring .env file
+# Ensure dev dependencies are installed for development
+RUN composer update --no-interaction --no-scripts --prefer-dist && \
+    composer dump-autoload --no-scripts
 
 # Create var directory if it doesn't exist and set permissions
 RUN mkdir -p /var/www/html/var && \
