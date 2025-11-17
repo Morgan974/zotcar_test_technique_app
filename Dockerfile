@@ -35,6 +35,18 @@ RUN if [ -f composer.lock ]; then \
 # Copy application files
 COPY . .
 
+# Create .env file if it doesn't exist (required by Symfony)
+# This file will be used as fallback, but environment variables from Render will override it
+RUN if [ ! -f .env ]; then \
+        echo "APP_ENV=prod" > .env && \
+        echo "APP_SECRET=change-me-in-production" >> .env && \
+        echo "DATABASE_URL=postgresql://user:password@localhost:5432/database" >> .env && \
+        echo "CORS_ALLOW_ORIGIN=^https?://(localhost|127\.0\.0\.1)(:[0-9]+)?$" >> .env && \
+        echo ".env file created in Dockerfile"; \
+    else \
+        echo ".env file already exists"; \
+    fi
+
 # Install/update dependencies, run scripts and generate autoloader
 # Skip scripts during build to avoid requiring .env file
 # Ensure dev dependencies are installed for development
