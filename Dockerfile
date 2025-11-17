@@ -59,5 +59,6 @@ RUN mkdir -p /var/www/html/var && \
 
 EXPOSE 8000
 
-CMD ["php", "-S", "0.0.0.0:8000", "-t", "public"]
+# Use a shell script to handle PORT environment variable from Render
+CMD ["sh", "-c", "php -S 0.0.0.0:${PORT:-8000} -t public"]
 

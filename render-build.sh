@@ -40,3 +40,13 @@ composer dump-autoload --no-scripts --optimize
 # Note: We don't clear cache here because it requires .env to be properly configured
 # Cache will be cleared automatically on first request if needed
 
+# Verify .env file exists before finishing
+if [ -f .env ]; then
+    echo ".env file verified at: $(pwd)/.env"
+    echo "Content preview:"
+    head -3 .env
+else
+    echo "ERROR: .env file not found after build!"
+    exit 1
+fi
+
